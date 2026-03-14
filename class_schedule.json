@@ -1,0 +1,8 @@
+{
+ "Monday": [
+  {"subject": "Math", "time": "10:00"}
+ ],
+ "Tuesday": [
+  {"subject": "Physics", "time": "11:00"}
+ ]
+}
