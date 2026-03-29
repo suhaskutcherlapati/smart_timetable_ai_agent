@@ -1,25 +1,39 @@
+import os
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-import os
 
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 def get_calendar_service():
-
     creds = None
 
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # project root folder
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    credentials_path = os.path.join(BASE_DIR, "credentials.json")
+    token_path = os.path.join(BASE_DIR, "token.json")
+
+    if os.path.exists(token_path):
+        creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 
     if not creds or not creds.valid:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            'credentials.json', SCOPES)
-        creds = flow.run_local_server(port=0)
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            if not os.path.exists(credentials_path):
+                raise FileNotFoundError(
+                    f"credentials.json not found. Put it here: {credentials_path}"
+                )
 
-        with open('token.json', 'w') as token:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                credentials_path,
+                SCOPES
+            )
+            creds = flow.run_local_server(port=0)
+
+        with open(token_path, "w") as token:
             token.write(creds.to_json())
 
-    service = build('calendar', 'v3', credentials=creds)
-
+    service = build("calendar", "v3", credentials=creds)
     return service
