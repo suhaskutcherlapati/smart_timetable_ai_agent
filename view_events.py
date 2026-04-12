@@ -1,21 +1,26 @@
-import json
-
-FILE = "storage/events.json"
-
+from .auth import get_calendar_service
+from datetime import datetime
 
 def get_events():
-    try:
-        with open(FILE, "r") as f:
-            events = json.load(f)
-    except:
-        return "No events found"
 
-    if not events:
-        return "No events scheduled"
+    service = get_calendar_service()
 
-    result = "\n📅 Events:\n"
-    for e in events:
-        result += f"{e['title']} -> {e['start']}\n"
+    now = datetime.utcnow().isoformat() + 'Z'
 
-    return result
+    events_result = service.events().list(
+        calendarId='primary',
+        timeMin=now,
+        maxResults=10,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
 
+    events = events_result.get('items', [])
+
+    results = []
+
+    for event in events:
+        start = event['start'].get('dateTime')
+        results.append(f"{event['summary']} at {start}")
+
+    return results
