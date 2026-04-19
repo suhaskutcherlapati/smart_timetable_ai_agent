@@ -128,3 +128,79 @@ elif option == "Study Planner":
 # -----------------------------
 st.markdown("---")
 st.markdown("✅ Built with Streamlit | AI Timetable Assistant")
+import pandas as pd
+
+if st.button("View Events"):
+    events = get_events()
+
+    if events:
+        df = pd.DataFrame(events)
+        st.dataframe(df)
+    else:
+        st.info("No events found")
+        st.subheader("📊 Dashboard")
+
+events = get_events()
+
+if events:
+    st.metric("Total Events", len(events))
+
+    st.write("Upcoming:")
+    for e in events[:5]:
+        st.write(f"📅 {e}")
+else:
+    st.info("No upcoming events")
+    from datetime import datetime
+
+data = view_assignments()
+
+today = datetime.today().date()
+
+for a in data:
+    deadline = datetime.strptime(a["deadline"], "%Y-%m-%d").date()
+    
+    if deadline < today:
+        st.error(f"⚠️ Missed: {a['title']}")
+    elif (deadline - today).days <= 2:
+        st.warning(f"⏳ Due Soon: {a['title']}")
+    else:
+        st.success(f"✅ {a['title']}")
+        import json
+
+if st.button("Export Schedule"):
+    data = view_classes()
+
+    json_data = json.dumps(data, indent=4)
+
+    st.download_button(
+        label="Download JSON",
+        data=json_data,
+        file_name="schedule.json",
+        mime="application/json"
+    )
+    if st.button("Add Class"):
+     if not title or not day or not time:
+        st.error("All fields required ❌")
+    else:
+        st.success(add_class(title, day, time, type_class))
+        data = view_classes()
+
+if data:
+    st.subheader("📈 Analytics")
+
+    days = [c["day"] for c in data]
+    st.bar_chart(pd.Series(days).value_counts())
+    st.set_page_config(
+    page_title="Smart Timetable",
+    page_icon="📅",
+    layout="wide"
+)
+
+st.markdown("""
+<style>
+.stButton>button {
+    background-color: #4CAF50;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
